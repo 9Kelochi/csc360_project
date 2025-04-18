@@ -1,27 +1,49 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import '../styles/Header.css';
+import { Link, useLocation } from 'react-router-dom';
 import logo from '../assets/logo.png';
 
+const navItems = [
+  { label: 'Home', to: '/' },
+  { label: 'Find Your Electronic', to: '/find' },
+  { label: 'About', to: '/about' },
+  { label: 'Contact', to: '/contact' },
+  { label: 'Submit', to: '/submit' },
+  { label: 'Login', to: '/login' },
+  { label: 'Register', to: '/register' },
+];
+
 const Header = () => {
+  const location = useLocation();
+
   return (
-    <section id="header">
+    <header className="sticky top-0 z-[999] bg-gradient-to-r from-indigo-800 via-cyan-700 to-blue-700 shadow-md px-10 py-5 flex justify-between items-center backdrop-blur-sm">
+      {/* Logo */}
       <Link to="/">
-        <img src={logo} className="logo" alt="BestElectronics4U Logo" />
+        <img src={logo} alt="BestElectronics4U Logo" className="w-32 rounded-md shadow-md" />
       </Link>
-      <div>
-        <ul id="navigator_bar">
-          <li><Link className="tab" to="/">Home</Link></li>
-          <li><Link to="/find">Find Your Electronic</Link></li>
-          <li><Link to="/about">About</Link></li>
-          <li><Link to="/contact">Contact</Link></li>
-          <li><Link to="/submit">Submit</Link></li>
-          <li><Link to="/login">Login</Link></li>
-          <li><Link to="/register">Register</Link></li>
+
+      {/* Navigation */}
+      <nav>
+        <ul className="flex items-center gap-4 text-white font-medium text-[1.1rem]">
+          {navItems.map(({ label, to }) => (
+            <li key={to}>
+              <Link
+                to={to}
+                className={`px-4 py-2 rounded-md transition duration-200 ${
+                  location.pathname === to
+                    ? 'bg-white text-blue-700 font-semibold shadow-md'
+                    : 'hover:bg-white/20 hover:text-white'
+                }`}
+              >
+                {label}
+              </Link>
+            </li>
+          ))}
         </ul>
-      </div>
-    </section>
+      </nav>
+    </header>
   );
 };
 
-export default Header; 
+export default Header;
+
