@@ -35,12 +35,7 @@ const dummyItems = [
 
 const ItemsDisplay = () => {
   return (
-    <section className="bg-gradient-to-br from-sky-800 via-cyan-700 to-indigo-900 min-h-screen py-16 px-6 text-white">
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-4xl font-extrabold text-center mb-10 drop-shadow-lg tracking-wide">
-          💼 Product Listings
-        </h2>
-
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {dummyItems.map((item, index) => (
             <div
@@ -68,7 +63,6 @@ const ItemsDisplay = () => {
           ))}
         </div>
       </div>
-    </section>
   );
 };
 
