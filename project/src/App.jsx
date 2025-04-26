@@ -9,6 +9,7 @@ import Footer from './components/Footer';
 import Auth from './pages/Auth';
 import Shop from './pages/Shop';
 import Pricing from './pages/Pricing';
+import About from './pages/About';
 
 const Home = () => {
   return (
@@ -33,6 +34,7 @@ function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/about" element={<About />} />
           </Routes>
         </main>
         <Footer />
