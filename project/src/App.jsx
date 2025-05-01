@@ -10,6 +10,7 @@ import Auth from './pages/Auth';
 import Shop from './pages/Shop';
 import Pricing from './pages/Pricing';
 import About from './pages/About';
+import Contact from './pages/Contact';
 
 const Home = () => {
   return (
@@ -35,6 +36,7 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<Navigate to="/" replace />} />
             <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
           </Routes>
         </main>
         <Footer />
