@@ -1,6 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const ContactForm = () => {
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    subject: '',
+    message: '',
+  });
+
+  const handleChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.id]: e.target.value,
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md">
@@ -12,8 +26,10 @@ const ContactForm = () => {
             <input
               id="fullName"
               type="text"
+              value={formData.fullName}
+              onChange={handleChange}
               placeholder="Your full name"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             />
           </div>
 
@@ -22,8 +38,10 @@ const ContactForm = () => {
             <input
               id="email"
               type="email"
+              value={formData.email}
+              onChange={handleChange}
               placeholder="you@example.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             />
           </div>
 
@@ -32,8 +50,10 @@ const ContactForm = () => {
             <input
               id="subject"
               type="text"
+              value={formData.subject}
+              onChange={handleChange}
               placeholder="Subject"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             />
           </div>
 
@@ -42,8 +62,10 @@ const ContactForm = () => {
             <textarea
               id="message"
               rows="4"
+              value={formData.message}
+              onChange={handleChange}
               placeholder="Type your message..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
             ></textarea>
           </div>
 
