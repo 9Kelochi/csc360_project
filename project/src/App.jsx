@@ -1,11 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Header from './components/Header';
-import MainSearch from './components/MainSearch';
-import Hero from './components/Hero';
-import Comments from './components/Comments';
-import SubmitForm from './components/SubmitForm';
-import Footer from './components/Footer';
+import Header from './components/main_page/Header';
+import Hero from './components/main_page/Hero';
+import Comments from './components/main_page/Comments';
+import SubmitForm from './components/main_page/SubmitForm';
+import Footer from './components/main_page/Footer';
 import Auth from './pages/Auth';
 import Shop from './pages/Shop';
 import Pricing from './pages/Pricing';
@@ -16,7 +15,6 @@ const Home = () => {
   return (
     <>
       <Hero />
-      <MainSearch />
       <Comments />
       <SubmitForm />
     </>

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import ItemsDisplay from '../components/ItemsDisplay';
+import ItemsDisplay from '../components/shop_item_page/ItemsDisplay';
 
 const Shop = () => {
   const [query, setQuery] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log('Searching for:', query);
-    // Here you can implement the search functionality
+    console.log('🔍 Searching for:', query);
+    setSearchTerm(query); // Trigger new search
   };
 
   return (
@@ -17,7 +18,7 @@ const Shop = () => {
           <span role="img" aria-label="briefcase">💼</span>
           Product Listings
         </h1>
-        
+
         {/* Search Bar */}
         <div className="max-w-3xl mx-auto mb-12 backdrop-blur-md bg-white/10 p-6 rounded-2xl shadow-xl border border-white/20">
           <form
@@ -39,11 +40,12 @@ const Shop = () => {
             </button>
           </form>
         </div>
-        
-        <ItemsDisplay />
+
+        {/* Pass searchTerm (finalized query) to the display */}
+        <ItemsDisplay searchQuery={searchTerm} />
       </div>
     </div>
   );
 };
 
-export default Shop; 
+export default Shop;

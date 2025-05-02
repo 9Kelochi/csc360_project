@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import background from '../assets/background.jpg';
+import background from '../../assets/background.jpg';
+
 
 const Hero = () => {
   return (
@@ -19,7 +20,7 @@ const Hero = () => {
           We offer a wide range of real products that can be found in real stores.
         </p>
         <Link
-          to="/find"
+          to="/Shop"
           className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded transition"
         >
           Find Your Electronic
