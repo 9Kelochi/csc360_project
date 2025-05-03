@@ -1,15 +1,27 @@
-import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import logo from "../../assets/logo.png";
-import ProfileIcon from "./ProfileIcon";
+import React, { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import logo from '../../assets/logo.png';
+import ProfileIcon from './ProfileIcon';
+import axios from 'axios';
 
-const Header = ({ setShowResults }) => {
+const Header = ({ user, setUser, setShowResults }) => {
   const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const cartRef = useRef();
+
+  const [cartOpen, setCartOpen] = useState(false);
+  const [savedItems, setSavedItems] = useState([]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    navigate('/');
+  };
 
   const handleHomeClick = () => {
-    if (location.pathname === "/") {
-      setShowResults(false);
+    if (location.pathname === '/') {
+      setShowResults?.(false);
     }
     window.scrollTo(0, 0);
     setMobileMenuOpen(false);
@@ -20,112 +32,163 @@ const Header = ({ setShowResults }) => {
     setMobileMenuOpen(false);
   };
 
+  const fetchSavedItems = async () => {
+    if (user?.user_id) {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/saved-items/${user.user_id}`);
+        setSavedItems(res.data || []);
+      } catch (err) {
+        console.error('❌ Failed to fetch saved items:', err.message);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchSavedItems();
+  }, [user]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (cartRef.current && !cartRef.current.contains(e.target)) {
+        setCartOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleRemove = async (product_id) => {
+    try {
+      await axios.delete(`http://localhost:5000/api/saved-items`, {
+        data: { user_id: user.user_id, product_id }
+      });
+      setSavedItems(prev => prev.filter(item => item.product_id !== product_id));
+    } catch (err) {
+      console.error('❌ Failed to remove item:', err.message);
+    }
+  };
+
   return (
-    <header className="sticky top-0 z-[999] bg-gradient-to-br from-indigo-900 via-cyan-800 to-blue-900 shadow-lg px-4 md:px-8 py-4 backdrop-blur-md border-b border-white/10">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        {/* Logo */}
-        <Link to="/" onClick={handleHomeClick} className="flex items-center">
-          <img
-            src={logo}
-            alt="BestElectronics4U Logo"
-            className="w-28 md:w-32 rounded-md shadow-md hover:shadow-cyan-400/30 transition-all duration-300"
-          />
-        </Link>
+    <header className="sticky top-0 z-[999] bg-gradient-to-r from-indigo-800 via-cyan-700 to-blue-700 shadow-md px-10 py-5 flex justify-between items-center backdrop-blur-sm">
+      <Link to="/" onClick={handleHomeClick}>
+        <img src={logo} alt="BestElectronics4U Logo" className="w-32 rounded-md shadow-md" />
+      </Link>
 
-        {/* Mobile Menu Button */}
-        <button
-          className="md:hidden text-white p-2 rounded-lg focus:outline-none bg-white/10 hover:bg-white/20 transition-colors"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {mobileMenuOpen ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            )}
-          </svg>
-        </button>
+      <nav>
+        <ul className="flex items-center gap-4 text-white font-medium text-[1.1rem] relative">
+        {[
+          { label: 'Home', to: '/' },
+          { label: 'Shop', to: '/shop' },
+          { label: 'Pricing', to: '/pricing' },
+          { label: 'About', to: '/about' },
+          { label: 'Contact', to: '/contact' },
+          { label: 'Submit', to: '/submit' },
+          ...(user ? [{ label: 'Dashboard', to: '/dashboard' }] : []), // ✅ Conditionally show Dashboard
+        ].map(({ label, to }) => (
+          <li key={to}>
+            <Link
+              to={to}
+              onClick={() => window.scrollTo(0, 0)}
+              className={`px-4 py-2 rounded-md transition duration-200 ${
+                location.pathname === to
+                  ? 'bg-white text-blue-700 font-semibold shadow-md'
+                  : 'hover:bg-white/20 hover:text-white'
+              }`}
+            >
+              {label}
+            </Link>
+          </li>
+        ))}
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:block">
-          <ul className="flex items-center gap-2 lg:gap-4 text-white font-medium">
-            {[
-              { label: "Home", to: "/" },
-              { label: "Shop", to: "/shop" },
-              { label: "Pricing", to: "/pricing" },
-              { label: "About", to: "/about" },
-              { label: "Contact", to: "/contact" },
-              { label: "Submit", to: "/submit" },
-            ].map(({ label, to }) => (
-              <li key={to}>
-                <Link
-                  to={to}
-                  onClick={handleLinkClick}
-                  className={`px-3 py-2 rounded-lg transition-all duration-200 ${
-                    location.pathname === to
-                      ? "bg-cyan-400 text-black font-semibold shadow-md"
-                      : "hover:bg-white/10 hover:text-cyan-300"
-                  }`}
-                >
-                  {label}
-                </Link>
-              </li>
-            ))}
-            <li className="ml-2">
-              <ProfileIcon />
+
+          {/* 🛒 Cart Icon */}
+          {user && (
+            <li className="relative" ref={cartRef}>
+             <button
+              onClick={() => setCartOpen(prev => !prev)}
+              className="relative text-white text-xl px-3 hover:text-yellow-300 transition"
+              title="Saved Items"
+            >
+              🛒
+              {savedItems.length > 0 && (
+                <span className="absolute -top-2 -right-1 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {savedItems.length}
+                </span>
+              )}
+            </button>
+
+
+              {cartOpen && (
+                <div className="absolute right-0 mt-2 w-96 max-h-96 overflow-y-auto bg-white text-black rounded-lg shadow-xl z-50 p-4 border border-gray-300">
+                  <h3 className="text-lg font-semibold mb-2 border-b pb-2">Saved Items</h3>
+                  {savedItems.length === 0 ? (
+                    <p className="text-sm text-gray-500">No saved items.</p>
+                  ) : (
+                    savedItems.map((item) => (
+                      <div key={item.product_id} className="flex gap-3 mb-4 border-b pb-2">
+                        <img
+                          src={item.image_url}
+                          alt={item.product_name}
+                          className="w-16 h-16 object-contain rounded border"
+                        />
+                        <div className="flex flex-col text-sm flex-1">
+                          <span className="font-medium">{item.product_name}</span>
+                          <span className="text-gray-600 text-xs">Shop: {item.shop_name}</span>
+                          <a
+                            href={item.external_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 underline text-xs mt-1"
+                          >
+                            View Product
+                          </a>
+                        </div>
+                        <button
+                          onClick={() => handleRemove(item.product_id)}
+                          className="text-red-500 hover:text-red-700 text-sm ml-1"
+                          title="Remove"
+                        >
+                          ❌
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </li>
-          </ul>
-        </nav>
-      </div>
+          )}
 
-      {/* Mobile Navigation Menu */}
-      {mobileMenuOpen && (
-        <nav className="md:hidden mt-4 pb-2 border-t border-white/10 pt-4">
-          <ul className="flex flex-col gap-2 text-white">
-            {[
-              { label: "Home", to: "/" },
-              { label: "Shop", to: "/shop" },
-              { label: "Pricing", to: "/pricing" },
-              { label: "About", to: "/about" },
-              { label: "Contact", to: "/contact" },
-              { label: "Submit", to: "/submit" },
-            ].map(({ label, to }) => (
-              <li key={to}>
-                <Link
-                  to={to}
-                  onClick={handleLinkClick}
-                  className={`block px-4 py-2 rounded-lg transition-all duration-200 ${
-                    location.pathname === to
-                      ? "bg-cyan-400 text-black font-semibold"
-                      : "hover:bg-white/10 hover:text-cyan-300"
-                  }`}
-                >
-                  {label}
-                </Link>
+          {/* Welcome & Logout */}
+          {user ? (
+            <>
+              <li className="text-white font-medium hidden md:block">
+                Welcome, {user.first_name || user.user_name.split(' ')[0]}!
               </li>
-            ))}
-            <li className="px-4 py-2">
-              <ProfileIcon />
+              <li>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition"
+                >
+                  Logout
+                </button>
+              </li>
+            </>
+          ) : (
+            <li>
+              <Link
+                to="/auth"
+                className="px-4 py-2 bg-white text-blue-700 font-semibold rounded-md shadow hover:bg-blue-100 transition"
+              >
+                Login
+              </Link>
             </li>
-          </ul>
-        </nav>
-      )}
+          )}
+
+          <li>
+            <ProfileIcon />
+          </li>
+        </ul>
+      </nav>
     </header>
   );
 };
