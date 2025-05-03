@@ -3,30 +3,25 @@ const mysql = require('mysql2/promise');
 const fs = require('fs');
 const csv = require('csv-parser');
 
+// Ensure category path exists (nested insert)
 async function ensureCategoryPathExists(db, fullPath) {
   const segments = fullPath.split('|');
   let parentId = null;
 
   for (const name of segments.map(s => s.trim())) {
-    let query, params;
+    const [rows] = await db.execute(
+      'SELECT category_id FROM category WHERE category_name = ? AND parent_id ' + (parentId === null ? 'IS NULL' : '= ?'),
+      parentId === null ? [name] : [name, parentId]
+    );
 
-    if (parentId === null) {
-      query = 'SELECT category_id FROM category WHERE category_name = ? AND parent_id IS NULL';
-      params = [name];
-    } else {
-      query = 'SELECT category_id FROM category WHERE category_name = ? AND parent_id = ?';
-      params = [name, parentId];
-    }
-
-    const [rows] = await db.execute(query, params);
     if (rows.length > 0) {
       parentId = rows[0].category_id;
     } else {
-      const [insertResult] = await db.execute(
+      const [result] = await db.execute(
         'INSERT INTO category (category_name, parent_id) VALUES (?, ?)',
         [name, parentId]
       );
-      parentId = insertResult.insertId;
+      parentId = result.insertId;
     }
   }
 
@@ -74,29 +69,30 @@ async function ensureCategoryPathExists(db, fullPath) {
             continue;
           }
 
-          // 🏪 Ensure shop
-          const [shopRows] = await connection.execute(
-            'SELECT shop_id FROM shop WHERE shop_name = ? LIMIT 1', [shop_name]
+          // 👤 Ensure vendor user
+          await connection.execute(
+            'INSERT IGNORE INTO user (user_id, user_name, email, user_password, is_vendor) VALUES (?, ?, ?, ?, ?)',
+            [user_id, user_name, `${user_id}@dummy.com`, 'hashed_password_placeholder', 1]
           );
-          const shop_id = shopRows.length > 0
-            ? shopRows[0].shop_id
-            : (await connection.execute(
-                'INSERT INTO shop (shop_name, shop_address) VALUES (?, ?)',
-                [shop_name, shop_address]
-              ))[0].insertId;
+
+          // 🏪 Ensure shop (shop_id is same as user_id)
+          const [shopRows] = await connection.execute(
+            'SELECT shop_id FROM shop WHERE shop_id = ?',
+            [user_id]
+          );
+          if (shopRows.length === 0) {
+            await connection.execute(
+              'INSERT INTO shop (shop_id, shop_name, shop_address) VALUES (?, ?, ?)',
+              [user_id, shop_name, shop_address]
+            );
+          }
 
           // 📂 Category
           const category_id = await ensureCategoryPathExists(connection, category);
 
-          // 👤 User
-          await connection.execute(
-            'INSERT IGNORE INTO user (user_id, user_name, email, user_password) VALUES (?, ?, ?, ?)',
-            [user_id, user_name, `${user_id}@dummy.com`, 'password']
-          );
-
           // 📦 Product
           await connection.execute(
-            `INSERT INTO product (
+            `INSERT IGNORE INTO product (
               product_id, product_name, discounted_price, actual_price, discount_percentage,
               rating, rating_count, about_product, image_url, external_url,
               category_id, shop_id
@@ -104,17 +100,17 @@ async function ensureCategoryPathExists(db, fullPath) {
             [
               product_id, product_name, dp, ap, disc || 0,
               rate || 0, rcount || 0, about_product,
-              img_link, product_link, category_id, shop_id
+              img_link, product_link, category_id, user_id
             ]
           );
 
-          // ✍ Multiple Reviews
+          // ✍ Reviews (if any)
           const ids = review_id.split(',');
           const titles = review_title.split(',');
           const contents = review_content.split(',');
 
-          const reviewCount = Math.min(ids.length, titles.length, contents.length);
-          for (let i = 0; i < reviewCount; i++) {
+          const count = Math.min(ids.length, titles.length, contents.length);
+          for (let i = 0; i < count; i++) {
             const rid = ids[i].trim();
             const title = titles[i].trim();
             const content = contents[i].trim();

@@ -7,6 +7,12 @@ require('dotenv').config();
 const app = express();
 app.use(cors());
 
+app.use(express.json()); 
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/saved-items', require('./routes/savedItems'));
+app.use('/api/vendor', require('./routes/vendor'));
+app.use('/api/categories', require('./routes/category'));
+
 
 //connect to DB via. enviroment variables.
 const db = mysql.createConnection({

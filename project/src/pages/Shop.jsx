@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ItemsDisplay from '../components/shop_item_page/ItemsDisplay';
 
-const Shop = () => {
+const Shop = ({ user, savedItems, setSavedItems }) => {
   const [query, setQuery] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -41,8 +41,13 @@ const Shop = () => {
           </form>
         </div>
 
-        {/* Pass searchTerm (finalized query) to the display */}
-        <ItemsDisplay searchQuery={searchTerm} />
+        {/* Items list with user and cart props passed */}
+        <ItemsDisplay
+          searchQuery={searchTerm}
+          user={user}
+          savedItems={savedItems}
+          setSavedItems={setSavedItems}
+        />
       </div>
     </div>
   );

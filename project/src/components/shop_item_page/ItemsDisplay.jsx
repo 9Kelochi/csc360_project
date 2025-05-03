@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const ItemsDisplay = ({ searchQuery }) => {
+const ItemsDisplay = ({ searchQuery, user, savedItems, setSavedItems }) => {
   const [items, setItems] = useState([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -18,6 +18,29 @@ const ItemsDisplay = ({ searchQuery }) => {
       setItems(prev => reset ? res.data : [...prev, ...res.data]);
     } catch (error) {
       console.error('❌ Error fetching products:', error);
+    }
+  };
+
+  const handleSaveItem = async (product_id) => {
+    if (!user) {
+      alert('❌ You must be logged in to save items!');
+      return;
+    }
+
+    try {
+      await axios.post('http://localhost:5000/api/saved-items', {
+        user_id: user.user_id,
+        product_id
+      });
+
+      // Re-fetch saved items and update shared state
+      const res = await axios.get(`http://localhost:5000/api/saved-items/${user.user_id}`);
+      setSavedItems(res.data || []);
+
+      alert('✅ Item saved to cart!');
+    } catch (err) {
+      console.error('❌ Error saving item:', err);
+      alert('❌ Failed to save item.');
     }
   };
 
@@ -99,6 +122,14 @@ const ItemsDisplay = ({ searchQuery }) => {
                   ${item.actual_price.toFixed(2)}
                 </span>
               </p>
+
+              {/* Save for later button */}
+              <button
+                onClick={() => handleSaveItem(item.product_id)}
+                className="mt-4 w-full bg-white text-indigo-700 py-2 rounded-md hover:bg-indigo-100 transition font-semibold"
+              >
+                Save for Later 🛒
+              </button>
             </div>
           </div>
         ))}
