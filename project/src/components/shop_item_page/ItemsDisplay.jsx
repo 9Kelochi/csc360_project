@@ -3,23 +3,28 @@ import axios from 'axios';
 
 const ItemsDisplay = ({ searchQuery, user, savedItems, setSavedItems }) => {
   const [items, setItems] = useState([]);
-  const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const limit = 30;
 
-  const fetchItems = async (reset = false) => {
-    try {
-      const res = await axios.get('http://localhost:5000/products', {
-        params: { offset: reset ? 0 : offset, query: searchQuery }
-      });
+  const fetchItems = async () => {
+  try {
+    const res = await axios.get('http://localhost:5000/products', {
+      params: { 
+        offset: (page - 1) * limit,
+        limit,
+        query: searchQuery 
+      }
+    });
 
-      if (res.data.length < 30) setHasMore(false);
-      else setHasMore(true);
+    const resultsCount = res.data.length;
+    setHasMore(resultsCount >= limit);
+    setItems(res.data); 
+  } catch (error) {
+    console.error('❌ Error fetching products:', error);
+  }
+};
 
-      setItems(prev => reset ? res.data : [...prev, ...res.data]);
-    } catch (error) {
-      console.error('❌ Error fetching products:', error);
-    }
-  };
 
   const handleSaveItem = async (product_id) => {
     if (!user) {
@@ -33,7 +38,6 @@ const ItemsDisplay = ({ searchQuery, user, savedItems, setSavedItems }) => {
         product_id
       });
 
-      // Re-fetch saved items and update shared state
       const res = await axios.get(`http://localhost:5000/api/saved-items/${user.user_id}`);
       setSavedItems(res.data || []);
 
@@ -44,30 +48,18 @@ const ItemsDisplay = ({ searchQuery, user, savedItems, setSavedItems }) => {
     }
   };
 
-  useEffect(() => {
-    if (offset > 0 && hasMore) {
-      fetchItems();
-    }
-  }, [offset]);
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
-    setOffset(0);
-    fetchItems(true);
+    setPage(1);
   }, [searchQuery]);
-
+  
   useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 50 &&
-        hasMore
-      ) {
-        setOffset(prev => prev + 30);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [hasMore]);
+    fetchItems();
+  }, [page, searchQuery]);
 
   return (
     <div className="max-w-6xl mx-auto p-4">
@@ -77,7 +69,6 @@ const ItemsDisplay = ({ searchQuery, user, savedItems, setSavedItems }) => {
             key={index}
             className="bg-white/10 border border-white/20 p-4 rounded-xl shadow-lg backdrop-blur-md flex flex-col md:flex-row gap-4"
           >
-            {/* Image */}
             <div className="md:w-1/3 w-full flex justify-center items-center">
               <img
                 src={item.image_url}
@@ -86,7 +77,6 @@ const ItemsDisplay = ({ searchQuery, user, savedItems, setSavedItems }) => {
               />
             </div>
 
-            {/* Details */}
             <div className="md:w-2/3 w-full flex flex-col justify-between">
               <h3 className="text-lg md:text-xl font-semibold text-white mb-1 line-clamp-2">
                 {item.product_name}
@@ -123,7 +113,6 @@ const ItemsDisplay = ({ searchQuery, user, savedItems, setSavedItems }) => {
                 </span>
               </p>
 
-              {/* Save for later button */}
               <button
                 onClick={() => handleSaveItem(item.product_id)}
                 className="mt-4 w-full bg-white text-indigo-700 py-2 rounded-md hover:bg-indigo-100 transition font-semibold"
@@ -133,6 +122,27 @@ const ItemsDisplay = ({ searchQuery, user, savedItems, setSavedItems }) => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center items-center mt-6 gap-4">
+        <button
+          onClick={() => handlePageChange(page - 1)}
+          disabled={page === 1}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded disabled:opacity-50"
+        >
+          ⬅ Prev
+        </button>
+
+        <span className="text-white font-semibold">Page {page}</span>
+
+        <button
+          onClick={() => handlePageChange(page + 1)}
+          disabled={!hasMore}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded disabled:opacity-50"
+        >
+          Next ➡
+        </button>
       </div>
     </div>
   );
